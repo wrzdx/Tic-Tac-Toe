@@ -1,0 +1,29 @@
+.turn {
+  text-align: center;
+  margin: 0;
+  font-size: 4rem;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: min(150px, 30%) min(150px,30%) min(150px,30%);
+  place-content: center;
+  min-height: 80vh;
+}
+
+.cell {
+  aspect-ratio: 1;
+  background-color: white;
+}
+
+.PlayerX {
+  background: no-repeat center/contain url("./assets/X.svg");
+}
+
+.PlayerO {
+  background: no-repeat url("./assets/O.svg");
+}
+
+.winCell {
+  background-color: rgb(69, 255, 69);
+}
