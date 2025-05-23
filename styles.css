@@ -1,14 +1,23 @@
-.turn {
+body {
   text-align: center;
+}
+
+.turn {
   margin: 0;
   font-size: 4rem;
 }
 
+h1 {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
 .board {
   display: grid;
-  grid-template-columns: min(150px, 30%) min(150px,30%) min(150px,30%);
+  grid-template-columns: 1fr 1fr 1fr;
   place-content: center;
-  min-height: 80vh;
+  width: 60vh;
+  margin: 24px auto;
 }
 
 .cell {

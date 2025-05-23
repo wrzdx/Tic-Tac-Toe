@@ -8,6 +8,25 @@
   <script src="./script.js" defer></script>
 </head>
 <body>
+  <h1>Welcome to Tic Tac Toe!</h1>
+  <form action="" class="params">
+    <p>
+      <label for="firstPlayer">First Player Name: </label>
+      <input type="text" name="firstPlayer" id="firstPlayer" value="PlayerX" required>
+    </p>
+    <p>
+      <label for="secondPlayer">Second Player Name: </label>
+      <input type="text" name="secondPlayer" id="secondPlayer" value="PlayerO" required>
+    </p>
+    <p>
+      <label for="size">Size: </label>
+      <input type="number" name="size" min="3" max="7" id="size" required value="3" 
+      placeholder="Greater than or equal to 3">
+    </p>
+    <button type="submit" class="init">
+      Create
+    </button>
+  </form>
   <h2 class="turn"></h2>
   <div class="board"></div>
 </body>
