@@ -25,14 +25,14 @@ h1 {
   background-color: white;
 }
 
-.PlayerX {
+.TokenX {
   background: no-repeat center/contain url("./assets/X.svg");
 }
 
-.PlayerO {
+.TokenO {
   background: no-repeat url("./assets/O.svg");
 }
 
-.winCell {
+.win {
   background-color: rgb(69, 255, 69);
 }

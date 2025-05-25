@@ -1,9 +1,9 @@
 function GameBoard(size=3) {
-  board = []
+  let board = []
   for (let i = 0; i < size; i++) {
     board[i] = [];
     for (let j = 0; j < size; j++) {
-      board[i].push(Cell());
+      board[i].push(Cell(i, j));
     }
   }
 
@@ -11,28 +11,45 @@ function GameBoard(size=3) {
 
   const setToken = (x, y, player) => {
     let cell = board[x][y];
-    if (cell.getValue()) return false;
-
     cell.setValue(player.getValue());
-    return true;
-  }
+  };
+
+  const setWin = (x, y) => {
+    let cell = board[x][y];
+    cell.setIsWin();
+  };
+
+  const isWin = (x, y) => {
+    let cell = board[x][y];
+    return cell.IsWin();
+  };
+
+  const getToken = (x, y) => board[x][y].getValue();
 
 
-  return {getBoard, setToken};
+  return {getBoard, getToken, setToken, setWin, isWin};
 }
 
-function Cell() {
+function Cell(x, y) {
   let value = null;
-
+  let isWin = false;
+  
   const setValue = (newValue) => {
     value = newValue;
   }
 
   const getValue = () => value;
+  const getPosition = () => [x,y];
+
+  const setIsWin = () => isWin = true;
+  const IsWin = () => isWin;
 
   return {
     setValue,
-    getValue
+    getValue,
+    getPosition,
+    setIsWin,
+    IsWin,
   };
 }
 
@@ -41,123 +58,247 @@ function Player(value, name) {
   
   const getScore = () => score;
   const increaseScore = () => ++score;
+  const resetScore = () => score = 0;
+  const getName = () => name;
   const getValue = () => value;
-  const getName = () => name ? name : value;
 
-  return {getValue, getScore, increaseScore, getName};
+  return {getScore, increaseScore, resetScore, getName, getValue};
+}
+
+function GameParameters(playerX, playerO, boardSize) {
+  const getPlayerXName = () => playerX;
+  const getPlayerOName = () => playerO;
+  const getBoardSize = () => boardSize;
+
+  return {getPlayerXName, getPlayerOName, getBoardSize};
 }
 
 function GameController() {
+  let roundCounter = 0;
+  let roundResult = "";
   let board = GameBoard();
-  let winCombination = [];
+  let cellsLeft = board.getBoard().length ** 2;
 
-  let firstPlayer = Player("PlayerX");
-  let secondPlayer = Player("PlayerO");
+  let playerX = Player("TokenX", "PlayerX");
+  let playerO = Player("TokenO", "PlayerO");
 
-  let activePlayer = firstPlayer;
+  let activePlayer = playerX;
 
   const switchPlayerTurn = () => {
-    activePlayer = activePlayer === firstPlayer ? secondPlayer : firstPlayer;
+    activePlayer = activePlayer === playerX ? playerO : playerX;
   };
 
   const getActivePlayer = () => activePlayer;
 
-  const findWinCombinationOrDraw = () => {
-    const combinations = (x, y, board) => {
-      const column = () => {
-        if (x + 2 >= board.length || !board[x][y].getValue()) return false;
+  const findWinLine = (x, y) => {
+    const currentBoard = board.getBoard();
+    let winLine = [];
+    const checkMainDiagonal = () => {
+      let startX = x - 2;
+      let startY = y - 2;
+      const checkCombo = () => (
+        currentBoard[startX][startY].getValue() === currentBoard[startX+1][startY+1].getValue() 
+        && currentBoard[startX+1][startY+1].getValue() === currentBoard[startX+2][startY+2].getValue()
+        && currentBoard[startX][startY].getValue() !== null
+      );
 
-        return (board[x][y].getValue() === board[x+1][y].getValue() 
-                && board[x][y].getValue() === board[x+2][y].getValue());
-      };
-      const row = () => {
-        if (y + 2 >= board.length || !board[x][y].getValue()) return false;
+      while (startX < 0 || startY < 0) {
+        startX++;
+        startY++;
+      }
 
-        return (board[x][y+1].getValue() === board[x][y].getValue() 
-        && board[x][y+2].getValue() === board[x][y].getValue());
-      };
-      const mainDiagonal = () => {
-        if (y + 2 >= board.length || x +2 >= board.length || 
-          !board[x][y].getValue()) return false;
-
-        return (board[x+1][y+1].getValue() === board[x][y].getValue() 
-          && board[x+2][y+2].getValue() === board[x][y].getValue());
-      };
-      const sideDiagonal = () => {
-        if (y - 2 < 0 || x +2 >= board.length || 
-          !board[x][y].getValue()) return false;
-
-        return (board[x+1][y-1].getValue() === board[x][y].getValue() 
-          && board[x+2][y-2].getValue() === board[x][y].getValue());
-      };
-      if (column()) return [x+2,y];
-      if (row()) return [x,y+2];
-      if (mainDiagonal()) return [x+2,y+2];
-      if (sideDiagonal()) return [x+2, y-2];
-      return null;
+      while (startX + 2 < currentBoard.length && startY + 2 < currentBoard.length) {
+        if (checkCombo()) {
+          winLine = [
+            currentBoard[startX][startY],
+            currentBoard[startX + 1][startY + 1],
+            currentBoard[startX + 2][startY + 2],
+          ];
+          return true;
+        } 
+        startX++;
+        startY++;
+      }
+      return false;
     };
 
-    for (let i=0; i < board.getBoard().length; i++) {
-      for (let j=0; j < board.getBoard().length; j++) {
-        const combo = combinations(i,j, board.getBoard());
-        if (combo) {
-          winCombination = [i,j,combo[0],combo[1]];
-          return true;
-        }
+    const checkSideDiagonal = () => {
+      let startX = x - 2;
+      let startY = y + 2;
+      const checkCombo = () => (
+        currentBoard[startX][startY].getValue() === currentBoard[startX+1][startY-1].getValue() 
+        && currentBoard[startX+1][startY-1].getValue() === currentBoard[startX+2][startY-2].getValue()
+        && currentBoard[startX][startY].getValue() !== null
+      );
+
+      while (startX < 0 || startY >= currentBoard.length) {
+        startX++;
+        startY--;
       }
+
+      while (startX + 2 < currentBoard.length && startY - 2 >= 0) {
+        if (checkCombo()) {
+          winLine = [
+            currentBoard[startX][startY],
+            currentBoard[startX + 1][startY - 1], 
+            currentBoard[startX + 2][startY - 2],
+          ];
+          return true;
+        } 
+        startX++;
+        startY--;
+      }
+      return false;
+    };
+
+    const checkHorizontal = () => {
+      let startY = y - 2;
+      const checkCombo = () => (
+        currentBoard[x][startY].getValue() === currentBoard[x][startY+1].getValue() 
+        && currentBoard[x][startY+1].getValue() === currentBoard[x][startY+2].getValue()
+        && currentBoard[x][startY].getValue() !== null
+      );
+
+      while (startY < 0) {
+        startY++;
+      }
+
+      while (startY + 2 < currentBoard.length) {
+        if (checkCombo()) {
+          winLine = [
+            currentBoard[x][startY],
+            currentBoard[x][startY + 1], 
+            currentBoard[x][startY + 2]
+          ];
+          return true;
+        } 
+        startY++;
+      }
+      return false;
+    };
+    const checkVertical = () => {
+      let startX = x - 2;
+      const checkCombo = () => (
+        currentBoard[startX][y].getValue() === currentBoard[startX+1][y].getValue() 
+        && currentBoard[startX+1][y].getValue() === currentBoard[startX+2][y].getValue()
+        && currentBoard[startX][y].getValue() !== null
+      );
+
+      while (startX < 0) {
+        startX++;
+      }
+
+      while (startX + 2 < currentBoard.length) {
+        if (checkCombo()) {
+          winLine = [
+            currentBoard[startX][y],
+            currentBoard[startX + 1][y], 
+            currentBoard[startX + 2][y],
+          ];
+          return true;
+        } 
+        startX++;
+      }
+      return false;
+    };
+
+    const checks = [
+      checkMainDiagonal,
+      checkSideDiagonal,
+      checkHorizontal,
+      checkVertical,
+    ]
+
+    for (check of checks) {
+      if (check()) return winLine;
     }
-    if (checkDraw()) {
-      winCombination = [-1];
-      return true;
-    }
-    return false;
+
+    return [];
   };
 
-  const checkDraw = () => board.getBoard().reduce(
-    (sum, row) => {
-      sum += row.reduce((rowSum, cell) => rowSum + +(cell.getValue()!==null), 0);
-      return sum;
-  }, 0) === board.getBoard().length ** 2;
+  const checkDraw = () => cellsLeft === 0;
+
+  const setWinLine = (winLine) => {
+    for (cell of winLine) {
+      board.setWin(...cell.getPosition())
+    }
+  }
 
   const playRound = (x, y) => {
-    if (board.setToken(x, y, activePlayer)) {
-      if (!findWinCombinationOrDraw()) {
-        switchPlayerTurn();
+
+    if (!board.getToken(x, y)) {
+      board.setToken(x, y, activePlayer)
+      cellsLeft--;
+      let winLine = findWinLine(x,y);
+
+      if (winLine.length) {
+        setWinLine(winLine);
+        activePlayer.increaseScore();
+        roundResult = "win";
+        roundCounter++;
+
+        return;
       }
+
+      if (checkDraw()) {
+        roundResult = "draw";
+        roundCounter++;
+
+        return;
+      }
+
+      switchPlayerTurn();
     }
   };
 
-  const getWinCombination = () => winCombination;
+  const getRoundNumber = () => roundCounter;
+  const getRoundResult = () => roundResult;
 
-  const reset = () => {
+
+  const restart = () => {
     board = GameBoard(board.getBoard().length);
-    winCombination = null;
-    activePlayer = firstPlayer;
+    activePlayer = playerX;
+    cellsLeft = board.getBoard().length ** 2;
+    roundResult = "";
   };
 
-  const init = (newFirstPlayer, newSecondPlayer, newSize) => {
-    firstPlayer = Player("PlayerX", newFirstPlayer);
-    secondPlayer = Player("PlayerO", newSecondPlayer);
-    activePlayer = firstPlayer;
-    board = GameBoard(newSize);
+  const init = (gameParams) => {
+    playerX = Player("TokenX", gameParams.getPlayerXName());
+    playerO = Player("TokenO", gameParams.getPlayerOName());
+    activePlayer = playerX;
+    board = GameBoard(gameParams.getBoardSize());
+    cellsLeft = board.getBoard().length ** 2;
+    roundResult = "";
   };
+
+  const getPlayers = () => [playerX, playerO];
+  const getBoard = () => board;
 
   return {
     getActivePlayer,
     playRound,
-    getBoard: board.getBoard,
-    getWinCombination,
-    reset,
+    getBoard,
+    restart,
     init,
+    getRoundNumber,
+    getRoundResult,
+    getPlayers,
   };
 }
 
 
 function ScreenController() {
   let game = GameController();
-  const initialState = document.querySelector("body").innerHTML;
+  
   let playerTurnDiv = document.querySelector(".turn");
   let boardDiv = document.querySelector(".board");
+
+  let restartBtn = document.querySelector(".restart");
+  let quitBtn = document.querySelector(".quit");
+
+  let playerXScore = document.querySelector(".playerXScore");
+  let playerOScore = document.querySelector(".playerOScore");
+  let ties = document.querySelector(".ties");
 
   
   const updateScreen = () => {
@@ -165,10 +306,17 @@ function ScreenController() {
 
     const board = game.getBoard();
     const activePlayer = game.getActivePlayer();
+    const roundResult = game.getRoundResult();
+    const players = game.getPlayers();
+    const roundNumber = game.getRoundNumber();
 
-    playerTurnDiv.textContent = `${activePlayer.getName()}`
+    playerTurnDiv.textContent = `${activePlayer.getName()}`;
+    playerXScore.innerText = `${players[0].getScore()}`;
+    playerOScore.innerText = `${players[1].getScore()}`;
+    ties.innerText = `${roundNumber - players[0].getScore() - players[1].getScore()}`;
+    
 
-    board.forEach((row, x) => {
+    board.getBoard().forEach((row, x) => {
       row.forEach((cell, y) => {
         const cellButton = document.createElement("button");
         cellButton.classList.add("cell");
@@ -178,89 +326,68 @@ function ScreenController() {
           cellButton.classList.add(cell.getValue());
         }
 
+        if (cell.IsWin()) {
+          cellButton.classList.add("win");
+        }
+
         cellButton.dataset.x = x;
         cellButton.dataset.y = y;
         boardDiv.appendChild(cellButton);
       })
     });
-    if (game.getWinCombination().length) {
-      if (game.getWinCombination().length === 1) {
-        playerTurnDiv.textContent = "It's a draw";
-      } else {  
-        const [x0, y0, x2, y2] = game.getWinCombination();
-        const [x1, y1] = [(x0+x2)/2, (y0+y2)/2];
 
-        const first = boardDiv.children.item(x0 * board.length + y0);
-        const second = boardDiv.children.item(x1 * board.length + y1);
-        const third = boardDiv.children.item(x2 * board.length + y2);
-        
-        first.classList.add("winCell");
-        second.classList.add("winCell");
-        third.classList.add("winCell");
 
-        playerTurnDiv.textContent = `${game.getActivePlayer().getName()} won!`;
-      }
+    if (roundResult === "win") {
+      playerTurnDiv.textContent = `${game.getActivePlayer().getName()} won!`;
+      boardDiv.removeEventListener("click", clickHandlerBoard);
+    } 
+    
+    if (roundResult === "draw") {
+      playerTurnDiv.textContent = "It's a draw!";
       boardDiv.removeEventListener("click", clickHandlerBoard);
     }
-  }
+    
+    }
 
   function clickHandlerBoard(e) {
-    const x = e.target.dataset.x;
-    const y = e.target.dataset.y;
-    if (!(x && y)) return;
+    const x = +e.target.dataset.x;
+    const y = + e.target.dataset.y;
     
     game.playRound(x, y);
     updateScreen();
   }
 
-  function init(e) {
-    game = GameController();
-    playerTurnDiv = document.querySelector(".turn");
-    boardDiv = document.querySelector(".board");
-    const form = document.querySelector(".params");
+  function backToIndex(e) {
+    boardDiv.removeEventListener("click", clickHandlerBoard);
+    restartBtn.removeEventListener("click", game.restart);
+    quitBtn.removeEventListener("click", backToIndex);
+    window.location.replace("index.html"); 
+  }
 
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return false;
+
+  const run = () => {
+    const params = JSON.parse(localStorage.getItem("gameParams"));
+    let gameParams = null;
+    if (params) {
+      gameParams = GameParameters(params.playerX, params.playerO, params.size);
     }
 
-    let firstPlayer = document.querySelector('form [name="firstPlayer"]').value;
-    let secondPlayer = document.querySelector('form [name="secondPlayer"]').value;
-    let size = document.querySelector('form [name="size"]').value;
-
-    game.init(firstPlayer, secondPlayer, size);
-    boardDiv.style["grid-template-columns"] = `repeat(${size}, 1fr)`;
-    e.preventDefault();
-    form.remove();
-    return true
-  }
-
-  function reset() {
-    let body = document.querySelector("body"); 
-    body.innerHTML = initialState;
-    const initBtn = document.querySelector(".init");
-    initBtn.addEventListener("click", start);
-  }
-
-  function run() {
-    const resetBtn = document.createElement("button");
-    resetBtn.classList.add("reset");
-    resetBtn.innerText = "Reset";
-    boardDiv.after(resetBtn);
+    game.init(gameParams);  
+    boardDiv.style["grid-template-columns"] = `repeat(${gameParams.getBoardSize()}, 1fr)`;  
     
     boardDiv.addEventListener("click", clickHandlerBoard);
-    resetBtn.addEventListener("click", reset);
+    restartBtn.addEventListener("click", 
+      (e) => {
+        game.restart();
+        boardDiv.addEventListener("click", clickHandlerBoard);
+        updateScreen();
+      });
+    quitBtn.addEventListener("click", backToIndex);
+
     updateScreen();
   }
-  function start(e) {
-    if (init(e)) {
-      run();
-    }
-  }
 
-  const initBtn = document.querySelector(".init");
-  initBtn.addEventListener("click", start);
-  
+  run();
 }
 
 ScreenController();
