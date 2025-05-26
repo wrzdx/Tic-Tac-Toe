@@ -296,11 +296,14 @@ function ScreenController() {
   let restartBtn = document.querySelector(".restart");
   let quitBtn = document.querySelector(".quit");
 
-  let playerXScore = document.querySelector(".playerXScore");
-  let playerOScore = document.querySelector(".playerOScore");
+  let playerXDiv = document.querySelector(".playerX");
+  let playerODiv = document.querySelector(".playerO");
   let ties = document.querySelector(".ties");
 
-  
+
+  const circleSVG = '<svg viewBox="-1.2 -1.2 10.40 10.40" id="meteor-icon-kit__regular-circle-xxs" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 8C1.79086 8 0 6.2091 0 4C0 1.79086 1.79086 0 4 0C6.2091 0 8 1.79086 8 4C8 6.2091 6.2091 8 4 8zM4 6C5.1046 6 6 5.1046 6 4C6 2.8954 5.1046 2 4 2C2.8954 2 2 2.8954 2 4C2 5.1046 2.8954 6 4 6z" fill="currentColor"></path></g></svg>';
+  const crossSVG = '<svg viewBox="-3.75 -3.75 32.50 32.50" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" fill="currentColor"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>cross</title> <desc>Created with Sketch Beta.</desc> <defs> </defs> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage"> <g id="Icon-Set-Filled" sketch:type="MSLayerGroup" transform="translate(-469.000000, -1041.000000)" fill="currentColor"> <path d="M487.148,1053.48 L492.813,1047.82 C494.376,1046.26 494.376,1043.72 492.813,1042.16 C491.248,1040.59 488.712,1040.59 487.148,1042.16 L481.484,1047.82 L475.82,1042.16 C474.257,1040.59 471.721,1040.59 470.156,1042.16 C468.593,1043.72 468.593,1046.26 470.156,1047.82 L475.82,1053.48 L470.156,1059.15 C468.593,1060.71 468.593,1063.25 470.156,1064.81 C471.721,1066.38 474.257,1066.38 475.82,1064.81 L481.484,1059.15 L487.148,1064.81 C488.712,1066.38 491.248,1066.38 492.813,1064.81 C494.376,1063.25 494.376,1060.71 492.813,1059.15 L487.148,1053.48" id="cross" sketch:type="MSShapeGroup"> </path> </g> </g> </g></svg>';
+
   const updateScreen = () => {
     boardDiv.textContent = "";
 
@@ -310,10 +313,12 @@ function ScreenController() {
     const players = game.getPlayers();
     const roundNumber = game.getRoundNumber();
 
-    playerTurnDiv.textContent = `${activePlayer.getName()}`;
-    playerXScore.innerText = `${players[0].getScore()}`;
-    playerOScore.innerText = `${players[1].getScore()}`;
-    ties.innerText = `${roundNumber - players[0].getScore() - players[1].getScore()}`;
+    playerTurnDiv.textContent = `${activePlayer.getName()}'s turn`;
+    playerXDiv.children.item(0).innerText = `${players[0].getName()}`;
+    playerXDiv.children.item(1).innerText = `${players[0].getScore()}`;
+    playerODiv.children.item(0).innerText = `${players[1].getName()}`;
+    playerODiv.children.item(1).innerText = `${players[1].getScore()}`;
+    ties.children.item(1).innerText = `${roundNumber - players[0].getScore() - players[1].getScore()}`;
     
 
     board.getBoard().forEach((row, x) => {
@@ -322,9 +327,14 @@ function ScreenController() {
         cellButton.classList.add("cell");
 
 
-        if (cell.getValue()) {
-          cellButton.classList.add(cell.getValue());
-        }
+        if (cell.getValue() === players[0].getValue()) {
+          cellButton.innerHTML = crossSVG;
+        } 
+
+        if (cell.getValue() === players[1].getValue()) {
+          cellButton.innerHTML = circleSVG;
+        } 
+
 
         if (cell.IsWin()) {
           cellButton.classList.add("win");

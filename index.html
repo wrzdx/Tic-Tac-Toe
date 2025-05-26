@@ -8,26 +8,26 @@
   <script src="./form.js" defer></script>
 </head>
 <body>
-  <h1>Welcome to Tic Tac Toe!</h1>
-  <form action="" class="gameParams">
-    <p>
-      <label for="firstPlayer">First Player (X) Name: </label>
-      <input type="text" name="playerX" id="firstPlayer" value="PlayerX" required>
-    </p>
-    <p>
-      <label for="secondPlayer">Second Player (O) Name: </label>
-      <input type="text" name="playerO" id="secondPlayer" value="PlayerO" required>
-    </p>
-    <p>
-      <label for="size">Size: </label>
-      <input type="number" name="size" min="3" max="7" id="size" required value="3" 
-      placeholder="Greater than or equal to 3">
-    </p>
-    <button type="submit" class="create">
-      Create
-    </button>
-  </form>
-  <h2 class="turn"></h2>
-  <div class="board"></div>
+  <div class="index">
+    <h1>Tic Tac Toe!</h1>
+    <form action="" class="gameParams">
+      <p class="name">
+        <label for="firstPlayer">Player 1 (X): </label>
+        <input type="text" name="playerX" id="firstPlayer" placeholder="Enter Name" required>
+      </p>
+      <p class="name">
+        <label for="secondPlayer">Player 2 (O): </label>
+        <input type="text" name="playerO" id="secondPlayer" placeholder="Enter Name" required>
+      </p>
+      <p class="size">
+        <label for="size">Size: </label>
+        <input type="number" name="size" min="3" max="7" id="size" required value="3"
+        placeholder="Greater than or equal to 3">
+      </p>
+      <button type="submit" class="create">
+        Create
+      </button>
+    </form>
+  </div>
 </body>
 </html>
