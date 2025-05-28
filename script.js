@@ -1,105 +1,94 @@
-function GameBoard(size=3) {
-  let board = []
-  for (let i = 0; i < size; i++) {
-    board[i] = [];
-    for (let j = 0; j < size; j++) {
-      board[i].push(Cell(i, j));
+class GameBoard {
+  constructor(size=3) {
+    this.board = [];
+    for (let i = 0; i < size; i++) {
+      this.board[i] = [];
+      for (let j = 0; j < size; j++) {
+        this.board[i].push(new Cell(i, j));
+      }
     }
   }
 
-  const getBoard = () => board;
+  get board() { return this._board;}
+  set board(newValue) {this._board = newValue};
 
-  const setToken = (x, y, player) => {
-    let cell = board[x][y];
-    cell.setValue(player.getValue());
+  setToken(x, y, player) {
+    if (isNaN(x) || isNaN(y)) return;
+    let cell = this.board[x][y];
+    cell.value = player.value;
   };
 
-  const setWin = (x, y) => {
-    let cell = board[x][y];
-    cell.setIsWin();
+  setWin(x, y) {
+    let cell = this.board[x][y];
+    cell.isWin = true;
   };
 
-  const isWin = (x, y) => {
-    let cell = board[x][y];
-    return cell.IsWin();
+  isWin(x, y) {
+    let cell = this.board[x][y];
+    return cell.isWin;
   };
 
-  const getToken = (x, y) => board[x][y].getValue();
-
-
-  return {getBoard, getToken, setToken, setWin, isWin};
-}
-
-function Cell(x, y) {
-  let value = null;
-  let isWin = false;
-  
-  const setValue = (newValue) => {
-    value = newValue;
+  getToken(x, y) { 
+    if (isNaN(x) || isNaN(y)) return 1;
+    return this.board[x][y].value;
   }
-
-  const getValue = () => value;
-  const getPosition = () => [x,y];
-
-  const setIsWin = () => isWin = true;
-  const IsWin = () => isWin;
-
-  return {
-    setValue,
-    getValue,
-    getPosition,
-    setIsWin,
-    IsWin,
-  };
 }
 
-function Player(value, name) {
-  let score = 0;
+class Cell {
+  constructor(x, y) {
+    this.value = null;
+    this.isWin = false; 
+    this.x = x;
+    this.y = y; 
+  }
+}
+
+class Player {
+  constructor(value, name) {
+    this.score = 0;
+    this.name = name;
+    this.value = value;
+  }
   
-  const getScore = () => score;
-  const increaseScore = () => ++score;
-  const resetScore = () => score = 0;
-  const getName = () => name;
-  const getValue = () => value;
-
-  return {getScore, increaseScore, resetScore, getName, getValue};
+  increaseScore() {++this._score;}
+  resetScore() {this._score = 0;}
 }
 
-function GameParameters(playerX, playerO, boardSize) {
-  const getPlayerXName = () => playerX;
-  const getPlayerOName = () => playerO;
-  const getBoardSize = () => boardSize;
-
-  return {getPlayerXName, getPlayerOName, getBoardSize};
+class GameParameters {
+  constructor(playerX, playerO, boardSize) {
+    this.playerX = playerX;
+    this.playerO = playerO;
+    this.boardSize = boardSize;
+  }
 }
 
-function GameController() {
-  let roundCounter = 0;
-  let roundResult = "";
-  let board = GameBoard();
-  let cellsLeft = board.getBoard().length ** 2;
+class GameController {
+  constructor(gameParams) {
+    this.playerX = new Player("TokenX", gameParams.playerXName);
+    this.playerO = new Player("TokenO", gameParams.playerOName);
+    this.activePlayer = this.playerX;
+    this.board = new GameBoard(gameParams.boardSize);
+    this.cellsLeft = this.board.board.length ** 2;
+    this.roundResult = "";
+    this.roundCounter = 0;
+  };
+  
 
-  let playerX = Player("TokenX", "PlayerX");
-  let playerO = Player("TokenO", "PlayerO");
-
-  let activePlayer = playerX;
-
-  const switchPlayerTurn = () => {
-    activePlayer = activePlayer === playerX ? playerO : playerX;
+  switchPlayerTurn() {
+    this.activePlayer = this.activePlayer === this.playerX ? this.playerO : this.playerX;
   };
 
-  const getActivePlayer = () => activePlayer;
 
-  const findWinLine = (x, y) => {
-    const currentBoard = board.getBoard();
+  findWinLine(x, y) {
+    const currentBoard = this.board.board;
     let winLine = [];
     const checkMainDiagonal = () => {
       let startX = x - 2;
       let startY = y - 2;
       const checkCombo = () => (
-        currentBoard[startX][startY].getValue() === currentBoard[startX+1][startY+1].getValue() 
-        && currentBoard[startX+1][startY+1].getValue() === currentBoard[startX+2][startY+2].getValue()
-        && currentBoard[startX][startY].getValue() !== null
+        currentBoard[startX][startY].value === currentBoard[startX+1][startY+1].value 
+        && currentBoard[startX+1][startY+1].value === currentBoard[startX+2][startY+2].value
+        && currentBoard[startX][startY].value !== null
       );
 
       while (startX < 0 || startY < 0) {
@@ -126,9 +115,9 @@ function GameController() {
       let startX = x - 2;
       let startY = y + 2;
       const checkCombo = () => (
-        currentBoard[startX][startY].getValue() === currentBoard[startX+1][startY-1].getValue() 
-        && currentBoard[startX+1][startY-1].getValue() === currentBoard[startX+2][startY-2].getValue()
-        && currentBoard[startX][startY].getValue() !== null
+        currentBoard[startX][startY].value === currentBoard[startX+1][startY-1].value 
+        && currentBoard[startX+1][startY-1].value === currentBoard[startX+2][startY-2].value
+        && currentBoard[startX][startY].value !== null
       );
 
       while (startX < 0 || startY >= currentBoard.length) {
@@ -154,9 +143,9 @@ function GameController() {
     const checkHorizontal = () => {
       let startY = y - 2;
       const checkCombo = () => (
-        currentBoard[x][startY].getValue() === currentBoard[x][startY+1].getValue() 
-        && currentBoard[x][startY+1].getValue() === currentBoard[x][startY+2].getValue()
-        && currentBoard[x][startY].getValue() !== null
+        currentBoard[x][startY].value === currentBoard[x][startY+1].value 
+        && currentBoard[x][startY+1].value === currentBoard[x][startY+2].value
+        && currentBoard[x][startY].value !== null
       );
 
       while (startY < 0) {
@@ -179,9 +168,9 @@ function GameController() {
     const checkVertical = () => {
       let startX = x - 2;
       const checkCombo = () => (
-        currentBoard[startX][y].getValue() === currentBoard[startX+1][y].getValue() 
-        && currentBoard[startX+1][y].getValue() === currentBoard[startX+2][y].getValue()
-        && currentBoard[startX][y].getValue() !== null
+        currentBoard[startX][y].value === currentBoard[startX+1][y].value 
+        && currentBoard[startX+1][y].value === currentBoard[startX+2][y].value
+        && currentBoard[startX][y].value !== null
       );
 
       while (startX < 0) {
@@ -209,86 +198,60 @@ function GameController() {
       checkVertical,
     ]
 
-    for (check of checks) {
+    for (let check of checks) {
       if (check()) return winLine;
     }
 
     return [];
   };
 
-  const checkDraw = () => cellsLeft === 0;
+  checkDraw() {return this.cellsLeft === 0;}
 
-  const setWinLine = (winLine) => {
-    for (cell of winLine) {
-      board.setWin(...cell.getPosition())
+  setWinLine(winLine) {
+    for (let cell of winLine) {
+      this.board.setWin(cell.x, cell.y);
     }
   }
 
-  const playRound = (x, y) => {
+  playRound(x, y) {
 
-    if (!board.getToken(x, y)) {
-      board.setToken(x, y, activePlayer)
-      cellsLeft--;
-      let winLine = findWinLine(x,y);
+    if (!this.board.getToken(x, y)) {
+      this.board.setToken(x, y, this.activePlayer)
+      this.cellsLeft--;
+      let winLine = this.findWinLine(x,y);
 
       if (winLine.length) {
-        setWinLine(winLine);
-        activePlayer.increaseScore();
-        roundResult = "win";
-        roundCounter++;
+        this.setWinLine(winLine);
+        this.activePlayer.increaseScore();
+        this.roundResult = "win";
+        this.roundCounter++;
 
         return;
       }
 
-      if (checkDraw()) {
-        roundResult = "draw";
-        roundCounter++;
+      if (this.checkDraw()) {
+        this.roundResult = "draw";
+        this.roundCounter++;
 
         return;
       }
 
-      switchPlayerTurn();
+      this.switchPlayerTurn();
     }
   };
 
-  const getRoundNumber = () => roundCounter;
-  const getRoundResult = () => roundResult;
 
-
-  const restart = () => {
-    board = GameBoard(board.getBoard().length);
-    activePlayer = playerX;
-    cellsLeft = board.getBoard().length ** 2;
-    roundResult = "";
-  };
-
-  const init = (gameParams) => {
-    playerX = Player("TokenX", gameParams.getPlayerXName());
-    playerO = Player("TokenO", gameParams.getPlayerOName());
-    activePlayer = playerX;
-    board = GameBoard(gameParams.getBoardSize());
-    cellsLeft = board.getBoard().length ** 2;
-    roundResult = "";
-  };
-
-  const getPlayers = () => [playerX, playerO];
-  const getBoard = () => board;
-
-  return {
-    getActivePlayer,
-    playRound,
-    getBoard,
-    restart,
-    init,
-    getRoundNumber,
-    getRoundResult,
-    getPlayers,
+  restart() {
+    this.board = new GameBoard(this.board.board.length);
+    this.activePlayer = this.playerX;
+    this.cellsLeft = this.board.board.length ** 2;
+    this.roundResult = "";
   };
 }
 
 
 function ScreenController() {
-  let game = GameController();
+  let game = null;
   
   let playerTurnDiv = document.querySelector(".turn");
   let boardDiv = document.querySelector(".board");
@@ -307,36 +270,37 @@ function ScreenController() {
   const updateScreen = () => {
     boardDiv.textContent = "";
 
-    const board = game.getBoard();
-    const activePlayer = game.getActivePlayer();
-    const roundResult = game.getRoundResult();
-    const players = game.getPlayers();
-    const roundNumber = game.getRoundNumber();
+    const board = game.board;
+    const activePlayer = game.activePlayer;
+    const roundResult = game.roundResult;
+    const playerX = game.playerX;
+    const playerO = game.playerO;
+    const roundNumber = game.roundNumber;
 
-    playerTurnDiv.textContent = `${activePlayer.getName()}'s turn`;
-    playerXDiv.children.item(0).innerText = `${players[0].getName()}`;
-    playerXDiv.children.item(1).innerText = `${players[0].getScore()}`;
-    playerODiv.children.item(0).innerText = `${players[1].getName()}`;
-    playerODiv.children.item(1).innerText = `${players[1].getScore()}`;
-    ties.children.item(1).innerText = `${roundNumber - players[0].getScore() - players[1].getScore()}`;
+    playerTurnDiv.textContent = `${activePlayer.name}'s turn`;
+    playerXDiv.children.item(0).innerText = `${playerX.name}`;
+    playerXDiv.children.item(1).innerText = `${playerX.score}`;
+    playerODiv.children.item(0).innerText = `${playerO.name}`;
+    playerODiv.children.item(1).innerText = `${playerO.score}`;
+    ties.children.item(1).innerText = `${roundNumber - playerX.score - playerO.score}`;
     
 
-    board.getBoard().forEach((row, x) => {
+    board.board.forEach((row, x) => {
       row.forEach((cell, y) => {
         const cellButton = document.createElement("button");
         cellButton.classList.add("cell");
 
 
-        if (cell.getValue() === players[0].getValue()) {
+        if (cell.value === playerX.value) {
           cellButton.innerHTML = crossSVG;
         } 
 
-        if (cell.getValue() === players[1].getValue()) {
+        if (cell.value === playerO.value) {
           cellButton.innerHTML = circleSVG;
         } 
 
 
-        if (cell.IsWin()) {
+        if (cell.isWin) {
           cellButton.classList.add("win");
         }
 
@@ -348,7 +312,7 @@ function ScreenController() {
 
 
     if (roundResult === "win") {
-      playerTurnDiv.textContent = `${game.getActivePlayer().getName()} won!`;
+      playerTurnDiv.textContent = `${game.activePlayer.name} won!`;
       boardDiv.removeEventListener("click", clickHandlerBoard);
     } 
     
@@ -379,11 +343,11 @@ function ScreenController() {
     const params = JSON.parse(localStorage.getItem("gameParams"));
     let gameParams = null;
     if (params) {
-      gameParams = GameParameters(params.playerX, params.playerO, params.size);
+      gameParams = new GameParameters(params.playerX, params.playerO, params.size);
     }
 
-    game.init(gameParams);  
-    boardDiv.style["grid-template-columns"] = `repeat(${gameParams.getBoardSize()}, 1fr)`;  
+    game = new GameController(gameParams);  
+    boardDiv.style["grid-template-columns"] = `repeat(${gameParams.boardSize}, 1fr)`;  
     
     boardDiv.addEventListener("click", clickHandlerBoard);
     restartBtn.addEventListener("click", 
